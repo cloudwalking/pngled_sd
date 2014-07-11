@@ -1,10 +1,15 @@
+#include <Adafruit_NeoPixel.h>
 #include <SD.h>
 
 // Format:
 // 0x60 0x60 <pixels> <frames> <frames per second>
 #define HEADER_SIZE 5
 
-#define LED_PIXEL_COUNT 55
+#define LED_COUNT 55
+#define LED_DATA_PIN 3
+#define LED_DEFAULT_BRIGHTNESS 25
+
+#define DEBUG false
 
 File file;
 uint8_t pixels_per_frame;
@@ -12,19 +17,25 @@ uint8_t frames;
 uint8_t frames_per_second;
 double start_ms;
 
+Adafruit_NeoPixel strip = Adafruit_NeoPixel(LED_COUNT, LED_DATA_PIN, NEO_GRB + NEO_KHZ800);
+
 void setup() {
-  Serial.begin(9600);
+  if (DEBUG) Serial.begin(9600);
+  if (DEBUG) while(!Serial);
   
   frames = 0;
   pixels_per_frame  = 0;
   frames_per_second = 0;
   
+  strip.begin();
+  strip.setBrightness(LED_DEFAULT_BRIGHTNESS);
+  
   pinMode(10, OUTPUT);
   if (!SD.begin(8)) {
-    Serial.println(F("couldn't start SD"));
+    if (DEBUG) Serial.println(F("couldn't start SD"));
   }
   if (!openFile("flame2.dat")) {
-    Serial.println(F("error opening file"));
+    if (DEBUG) Serial.println(F("error opening file"));
   }
   
   while(file.available() < HEADER_SIZE);
@@ -32,31 +43,31 @@ void setup() {
   // Format:
   // 0x60 0x60 <pixels> <frames> <frames per second>
   if (!(file.read() == 0x60 && file.read() == 0x60)) {
-    Serial.println(F("invalid format"));
+    if (DEBUG) Serial.println(F("invalid format"));
   }
   
   pixels_per_frame  = (uint8_t)file.read();
   frames            = (uint8_t)file.read();
   frames_per_second = (uint8_t)file.read();
   
-  Serial.print("frames: "); Serial.println(frames);
-  Serial.print("pixels: "); Serial.println(pixels_per_frame);
-  Serial.print("fps   : "); Serial.println(frames_per_second);
+  if (DEBUG) Serial.print("frames: "); if (DEBUG) Serial.println(frames);
+  if (DEBUG) Serial.print("pixels: "); if (DEBUG) Serial.println(pixels_per_frame);
+  if (DEBUG) Serial.print("fps   : "); if (DEBUG) Serial.println(frames_per_second);
   
   start_ms = millis();
 }
 
 void loop() {
   // Choose which frame to show based on the current time.
-  double now = millis() - start_ms;
+  double now = (millis() - start_ms) / 1000;
   int frame_num = fmod(now * frames_per_second, frames);
   
-  Serial.print("frame_num:  ");
-  Serial.println(frame_num);
+  if (DEBUG) Serial.print("frame_num:  ");
+  if (DEBUG) Serial.println(frame_num);
   
   showFrameAtLocation(frame_num);
   
-  delay(40);
+  delay(10);
 }
 
 bool openFile(char *filename) {
@@ -76,19 +87,22 @@ void showFrameAtLocation(uint8_t frame_num) {
   Serial.println(offset);
 
   if (!file.seek(offset)) {
-    Serial.println("error seeking file");
-    Serial.print("seek: "); Serial.println(offset);
-    Serial.print("file size: "); Serial.println(file.size());
+    if (DEBUG) Serial.println("error seeking file");
+    if (DEBUG) Serial.print("seek: "); Serial.println(offset);
+    if (DEBUG) Serial.print("file size: "); Serial.println(file.size());
   }
 
   for (uint8_t i = 0; i < pixels_per_frame; i++) {
-    if (i >= LED_PIXEL_COUNT) break;
+    if (i >= LED_COUNT) break;
     
     red = (uint8_t)file.read();
     green = (uint8_t)file.read();
     blue = (uint8_t)file.read();
     
-    // TODO: light up some LEDs
+    strip.setPixelColor(i, strip.Color(red, green, blue));
   }
-  Serial.println();
+  
+  strip.show();
+  
+  if (DEBUG) Serial.println();
 }
