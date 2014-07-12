@@ -9,7 +9,7 @@
 #define LED_DATA_PIN 3
 #define LED_DEFAULT_BRIGHTNESS 25
 
-#define DEBUG true
+#define DEBUG false
 
 File file;
 uint8_t pixels_per_frame;
@@ -36,7 +36,7 @@ void setup() {
   if (!SD.begin(8)) {
     if (DEBUG) Serial.println(F("couldn't start SD"));
   }
-  if (!openFile(&file, "rainbow2.dat")) {
+  if (!openFile(&file, "flame3.dat")) {
     if (DEBUG) Serial.println(F("error opening file"));
   }
   
