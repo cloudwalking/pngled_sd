@@ -9,9 +9,9 @@
 #define LED_DATA_PIN 3
 #define LED_DEFAULT_BRIGHTNESS 25
 
-#define DEBUG false
+#define DEBUG true
 
-File file1, file2;
+File file;
 uint8_t pixels_per_frame;
 uint8_t frames;
 uint8_t frames_per_second;
@@ -36,7 +36,7 @@ void setup() {
   if (!SD.begin(8)) {
     if (DEBUG) Serial.println(F("couldn't start SD"));
   }
-  if (!openFile(file1, "rainbow2.dat")) {
+  if (!openFile(&file, "rainbow2.dat")) {
     if (DEBUG) Serial.println(F("error opening file"));
   }
   
@@ -74,9 +74,9 @@ void loop() {
   delay(20);
 }
 
-bool openFile(File file, char *filename) {
-  file = SD.open(filename);
-  return file != false;
+bool openFile(File *file, char *filename) {
+  *file = SD.open(filename);
+  return *file != false;
 }
 
 void showFrameAtLocation(uint8_t frame_num) {
@@ -87,8 +87,8 @@ void showFrameAtLocation(uint8_t frame_num) {
   double offset = frame_num * pixels_per_frame * colors_per_pixel;
   offset += HEADER_SIZE;
   
-  Serial.print("offset:  ");
-  Serial.println(offset);
+  if (DEBUG) Serial.print("offset:  ");
+  if (DEBUG) Serial.println(offset);
 
   if (!file.seek(offset)) {
     if (DEBUG) Serial.println("error seeking file");
