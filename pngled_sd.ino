@@ -11,11 +11,12 @@
 
 #define DEBUG false
 
-File file;
+File file1, file2;
 uint8_t pixels_per_frame;
 uint8_t frames;
 uint8_t frames_per_second;
 double start_ms;
+int current_frame_num;
 
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(LED_COUNT, LED_DATA_PIN, NEO_GRB + NEO_KHZ800);
 
@@ -26,6 +27,7 @@ void setup() {
   frames = 0;
   pixels_per_frame  = 0;
   frames_per_second = 0;
+  current_frame_num = -1;
   
   strip.begin();
   strip.setBrightness(LED_DEFAULT_BRIGHTNESS);
@@ -34,7 +36,7 @@ void setup() {
   if (!SD.begin(8)) {
     if (DEBUG) Serial.println(F("couldn't start SD"));
   }
-  if (!openFile("flame2.dat")) {
+  if (!openFile(file1, "rainbow2.dat")) {
     if (DEBUG) Serial.println(F("error opening file"));
   }
   
@@ -62,15 +64,17 @@ void loop() {
   double now = (millis() - start_ms) / 1000;
   int frame_num = fmod(now * frames_per_second, frames);
   
-  if (DEBUG) Serial.print("frame_num:  ");
-  if (DEBUG) Serial.println(frame_num);
+  if (frame_num != current_frame_num) {
+    current_frame_num = frame_num;
+    if (DEBUG) Serial.print("frame_num:  ");
+    if (DEBUG) Serial.println(frame_num);
+    showFrameAtLocation(frame_num);
+  }
   
-  showFrameAtLocation(frame_num);
-  
-  delay(10);
+  delay(20);
 }
 
-bool openFile(char *filename) {
+bool openFile(File file, char *filename) {
   file = SD.open(filename);
   return file != false;
 }

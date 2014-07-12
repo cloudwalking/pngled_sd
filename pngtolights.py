@@ -31,14 +31,21 @@ def constructDataFileText(image):
       string += chr(int(row[2]))
 
   return string
-
-if __name__ == "__main__":
-  name = sys.argv[1]
-
-  image = Image.open(name + ".png");
-  png = numpy.asarray(image)
   
-  print png.shape
+def make(filename):
+  image = Image.open(filename);
+  png = numpy.asarray(image)
+
+  print filename + "  " + str(png.shape)
 
   data = constructDataFileText(png);
-  printStringToFile(data, name + ".dat");
+  filename = filename[:-4] + ".dat";
+  printStringToFile(data, filename);
+
+if __name__ == "__main__":
+  
+  if len(sys.argv) < 2:
+    print "Usage: python " + sys.argv[0] + " <image.png> [image2.png ...]"
+  else:
+    for arg in sys.argv[1:]:
+      make(arg)
