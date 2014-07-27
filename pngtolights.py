@@ -25,7 +25,8 @@ def constructDataFileText(image):
   string += chr(pixels_per_sec)
   
   for i in range(0, frames):
-    for row in image[ : ,i]:
+    column = numpy.fliplr(image [:,i])
+    for row in column:
       string += chr(int(row[0]))
       string += chr(int(row[1]))
       string += chr(int(row[2]))
